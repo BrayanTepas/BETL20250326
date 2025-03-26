@@ -19,9 +19,17 @@ namespace BETL20250326.AppWebMVC.Controllers
         }
 
         // GET: Brands
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(Brand marca, int topRegistro = 10)
         {
-            return View(await _context.Brands.ToListAsync());
+            var query = _context.Brands.AsQueryable();
+            if (!string.IsNullOrWhiteSpace(marca.BrandName))
+                query = query.Where(s => s.BrandName.Contains(marca.BrandName));
+
+            if (topRegistro > 0)
+                query = query.Take(topRegistro);
+
+
+            return View(await query.ToListAsync());
         }
 
         // GET: Brands/Details/5
