@@ -19,9 +19,21 @@ namespace BETL20250326.AppWebMVC.Controllers
         }
 
         // GET: Users
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(User usuario, int topRegistro = 10, string Role = "Seleccionar")
         {
-            return View(await _context.Users.ToListAsync());
+            var query = _context.Users.AsQueryable();
+            if (!string.IsNullOrWhiteSpace(usuario.Username))
+                query = query.Where(s => s.Username.Contains(usuario.Username));
+            if (!string.IsNullOrWhiteSpace(usuario.Email))
+                query = query.Where(s => s.Email.Contains(usuario.Email));
+            if (Role != "Seleccionar")
+                query = query.Where(s => s.Role.Contains(usuario.Role));
+
+            if (topRegistro > 0)
+                query = query.Take(topRegistro);
+
+
+            return View(await query.ToListAsync());
         }
 
         // GET: Users/Details/5
@@ -85,34 +97,36 @@ namespace BETL20250326.AppWebMVC.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Username,Email,Password,Role")] User user)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Username,Email,Role")] User user)
         {
             if (id != user.Id)
             {
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            var userUpdate = await _context.Users.FirstOrDefaultAsync(m => m.Id == user.Id);
+
+            try
             {
-                try
-                {
-                    _context.Update(user);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!UserExists(user.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
+                userUpdate.Username = user.Username;
+                userUpdate.Email = user.Email;
+                userUpdate.Role = user.Role;
+
+                _context.Update(userUpdate);
+                await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            return View(user);
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!UserExists(user.Id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    return View(user);
+                }
+            }
         }
 
         // GET: Users/Delete/5
