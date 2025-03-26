@@ -43,14 +43,15 @@
         
     </div>
 
-    <div class="form-group mt-2">
-        <input type="submit" value="Crear" class="btn btn-success" />
+    <div class="row mt-3 mb-2">
+        <div class="col-12">
+            <input type="submit" value="crear" class="btn btn-success" />
+            <a asp-action="Index" class="btn btn-dark">cancelar</a>
+        </div>
     </div>
 </form>
 
-<div class="mt-2">
-    <a asp-action="Index" class="btn btn-dark">cancelar</a>
-</div>
+
 
 @section Scripts {
     @{
