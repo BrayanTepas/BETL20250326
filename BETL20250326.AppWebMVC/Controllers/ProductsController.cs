@@ -19,11 +19,32 @@ namespace BETL20250326.AppWebMVC.Controllers
         }
 
         // GET: Products
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(Product producto, int topRegistro = 10)
         {
-            var test20250326DbContext = _context.Products.Include(p => p.Brand).Include(p => p.Warehouse);
-            return View(await test20250326DbContext.ToListAsync());
+            var query = _context.Products.AsQueryable();
+            if (!string.IsNullOrWhiteSpace(producto.ProductName))
+                query = query.Where(s => s.ProductName.Contains(producto.ProductName));
+            if (!string.IsNullOrWhiteSpace(producto.Description))
+                query = query.Where(s => s.Description.Contains(producto.Description));
+            if (producto.BrandId > 0)
+                query = query.Where(s => s.BrandId == producto.BrandId);
+            if (producto.WarehouseId > 0)
+                query = query.Where(s => s.WarehouseId == producto.WarehouseId);
+            if (topRegistro > 0)
+                query = query.Take(topRegistro);
+            query = query
+                .Include(p => p.Warehouse).Include(p => p.Brand);
+
+            var marcas = _context.Brands.ToList();
+            marcas.Add(new Brand { BrandName = "SELECCIONAR", Id = 0 });
+            var categorias = _context.Warehouses.ToList();
+            categorias.Add(new Warehouse { WarehouseName = "SELECCIONAR", Id = 0 });
+            ViewData["WarehouseId"] = new SelectList(categorias, "Id", "WarehouseName", 0);
+            ViewData["BrandId"] = new SelectList(marcas, "Id", "BrandName", 0);
+
+            return View(await query.ToListAsync());
         }
+
 
         // GET: Products/Details/5
         public async Task<IActionResult> Details(int? id)
